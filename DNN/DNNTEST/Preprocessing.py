@@ -17,11 +17,13 @@ def random_spatial_sequence(split_rate, full_sequence):
 
 def collate_fn(batch):
     # 从每个样本的字典中获取处理结果、标签和其他数据，并将它们存储在同一个字典中
-    processed_data = [torch.FloatTensor(sample["processed_data"]) for sample in batch]
-    label_data = [sample["label_data"] for sample in batch]
+    processed_data = [torch.FloatTensor(sample['processed_data']) for sample in batch]
+    label_data = [sample['label_data'] for sample in batch]
+    meta_data = [sample['meta_data'] for sample in batch]
     
     # 将所有需要传递的数据都保存在同一个字典中
-    batch_dict = {"processed_data": torch.stack(processed_data),
-                  "label_data": label_data}
+    batch_dict = {'processed_data': torch.stack(processed_data),
+                'label_data': label_data,
+                 'meta_data': meta_data}
     
     return batch_dict

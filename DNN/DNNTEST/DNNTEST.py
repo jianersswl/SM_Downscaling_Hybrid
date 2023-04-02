@@ -6,11 +6,11 @@ class DNNTEST(nn.Module):
         super(DNNTEST, self).__init__()
         # TODO: modify model's structure, be aware of dimensions. 
         self.layers = nn.Sequential(
-            nn.Linear(input_dim, 16),
+            nn.Linear(input_dim, 4),
             nn.ReLU(),
-            nn.Linear(16, 8),
+            nn.Linear(4, 2),
             nn.ReLU(),
-            nn.Linear(8, 1)
+            nn.Linear(2, 1)
         )
 
     def forward(self, x):
