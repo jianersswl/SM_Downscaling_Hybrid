@@ -64,16 +64,17 @@ class SMAPDataset(Dataset):
                       
     def __getitem__(self, idx):
         # 定义数据package
-        data_pkg = {'processed_data': [], 'label_data': [], 'meta_data': []}
+        data_pkg = {'processed_data': [], 'label_data': [], 'meta_data': {}}
         
         # 获取input数据路径
         smap_path = self.smap[idx]
         texture_path = self.texture[idx]
         
         # 通过路径获取日期和SMAPID
-        date = re.findall(r'\d+', smap_path)[-2]
-        SMAPID = os.path.basename(smap_path).split('.')[0]
-        data_pkg['meta_data'] = [date, SMAPID]
+        date = re.findall(r'\d+', smap_path)[-2] # //2015091//0.npy
+        smapid = os.path.basename(smap_path).split('.')[0]
+        data_pkg['meta_data']['date'] = date
+        data_pkg['meta_data']['smapid'] = smapid
         
         # 加载input数据
         smap = np.load(smap_path)
@@ -90,10 +91,14 @@ class SMAPDataset(Dataset):
         # 一个SMAPID可能对应多个in-situ sm
         sm_list = self.sm[idx]
         ati_list = self.ati[idx]
+        data_pkg['meta_data']['insituid'] = []
         for i in range(len(sm_list)):
             # 获取数据路径
             sm_path = sm_list[i]
             ati_path = ati_list[i]
+            # 通过路径获取站点id
+            insituid = re.findall(r'\d+', sm_path)[-1] #//2015091//1.npy
+            data_pkg['meta_data']['insituid'].append(insituid)
             # 加载数据
             sm = np.load(sm_path, allow_pickle=True)
             ati = np.load(ati_path, allow_pickle=True)
@@ -112,7 +117,8 @@ class SMAPDataset(Dataset):
     def __stack__(self, smap:np.array, texture:np.array)->np.array:
         shape = [texture.shape[0],texture.shape[0], 1]
         extend_smap = np.ones(shape)*smap[0]
-        return np.concatenate((extend_smap, texture), axis=2)
+        conca_data = np.concatenate((extend_smap, texture[:, :, 1:-1]), axis=2)
+        return conca_data
     
     def __flatten__(self, smap:np.array, texture:np.array)->np.array:
         # normalization is done before loading
