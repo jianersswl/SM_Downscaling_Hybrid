@@ -58,6 +58,7 @@ def display_sm(sm_list, sm_pred_list, ab_pred_list, flag):
     # 绘制第一个子图
     fig_ax1.plot(x1, sm_list, label='sm')
     fig_ax1.plot(x1, sm_pred_list, label='sm_pred')
+#     fig_ax1.plot(x1, sm_list-sm_pred_list, label='sm_pred')
     fig_ax1.legend()
     
     # 设置第二个子图的标题和横纵坐标标签
@@ -84,12 +85,12 @@ def calculate_upscaling_sm(sm_bar, sm_bar_sd, ati, ati_bar, ati_bar_sd):
 def self_defined_sm_loss(pred_ab, label_data, flag, sim_threshold):
     pred_a = pred_ab[:, 0].unsqueeze(1)
     pred_b = pred_ab[:, 1].unsqueeze(1)
-    return ab_physics_loss_sm(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 1) + EDS_loss(pred_b, sim_threshold, 0.5)
+    return ab_physics_loss_sm(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 1) #+ EDS_loss(pred_b, sim_threshold, 0.5)
 
 def self_defined_smap_loss(pred_ab, label_data, flag, sim_threshold):
     pred_a = pred_ab[:, 0].unsqueeze(1)
     pred_b = pred_ab[:, 1].unsqueeze(1)
-    return ab_physics_loss_smap(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 1) + EDS_loss(pred_b, sim_threshold, 0.5)
+    return ab_physics_loss_smap(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 10) + EDS_loss(pred_b, sim_threshold, 1)
 
 def ab_physics_loss_smap(pred_ab, label_data, flag):
     # 获取smap
@@ -171,7 +172,7 @@ def EDS_loss(pred, penalty_threshold, penalty_lambda):
     # 计算均值
     non_dig_sum_mean = non_dig_sum/(eds_sim_mat.shape[0]*(eds_sim_mat.shape[0]-1))
     similarity = 1/(1+non_dig_sum_mean)
-#     print('non_dig_sum_mean: ', non_dig_sum_mean)
+#     print('similarity: ', similarity)
 #     similarity = similarity*similarity
     if(similarity<=penalty_threshold):
         penalty_lambda = 0

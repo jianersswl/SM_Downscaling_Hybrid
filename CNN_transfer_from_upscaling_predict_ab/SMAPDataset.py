@@ -18,6 +18,7 @@ class SMAPDataset(Dataset):
         # 输入变量
         self.smap = []       # SMAP数据路径
         self.texture = []     # 土壤质地数据路径
+        self.ndvi = []       # 植被指数数据路径
         
         # label变量
         self.smap_unorm = []   # SMAP数据的非归一化值路径
@@ -56,10 +57,12 @@ class SMAPDataset(Dataset):
                     # 添加输入变量路径
                     self.smap.append(root + '\\INPUT\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
                     self.texture.append(root + '\\INPUT\\TEXTURE\\' + str(smapid) + '.npy')
+                    self.ndvi.append(root + '\\INPUT\\NDVI\\GRID\\' + str(day) + '\\' + str(smapid) + '.npy')
 
                     # 显示添加的路径
                     print_path(root + '\\INPUT\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
                     print_path(root + '\\INPUT\\TEXTURE\\' + str(smapid) + '.npy')
+                    print_path(root + '\\INPUT\\NDVI\\GRID\\' + str(day) + '\\' + str(smapid) + '.npy')
 
                     # 添加LABEL变量路径
                     self.smap_unorm.append(root + '\\LABEL\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
@@ -94,10 +97,12 @@ class SMAPDataset(Dataset):
                     # 添加输入变量路径
                     self.smap.append(root + '\\INPUT\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
                     self.texture.append(root + '\\INPUT\\TEXTURE\\' + str(smapid) + '.npy')
-
+                    self.ndvi.append(root + '\\INPUT\\NDVI\\GRID\\' + str(day) + '\\' + str(smapid) + '.npy')
+                    
                     # 显示添加的路径
                     print_path(root + '\\INPUT\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
                     print_path(root + '\\INPUT\\TEXTURE\\' + str(smapid) + '.npy')
+                    print_path(root + '\\INPUT\\NDVI\\GRID\\' + str(day) + '\\' + str(smapid) + '.npy')
 
                     # 添加LABEL变量路径
                     self.smap_unorm.append(root + '\\LABEL\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
@@ -129,6 +134,7 @@ class SMAPDataset(Dataset):
         # 获取input数据路径
         smap_path = self.smap[idx]
         texture_path = self.texture[idx]
+        ndvi_path = self.ndvi[idx]
         
         # 通过路径获取日期和SMAPID
         date = re.findall(r'\d+', smap_path)[-2] # //2015091//0.npy
@@ -139,9 +145,10 @@ class SMAPDataset(Dataset):
         # 加载input数据
         smap = np.load(smap_path)
         texture = np.load(texture_path)
+        ndvi = np.load(ndvi_path)
         
         # 选择堆叠为连接input特征的方式
-        x = self.__stack__(smap, texture)
+        x = self.__stack__(smap, texture, ndvi)
         data_pkg['processed_data'] = x
         
         # 加载label数据
@@ -180,10 +187,13 @@ class SMAPDataset(Dataset):
         return len(self.smap)
 
     ### the way to concatenate input data
-    def __stack__(self, smap:np.array, texture:np.array)->np.array:
+    def __stack__(self, smap:np.array, texture:np.array, ndvi:np.array)->np.array:
+#         print(ndvi)
         shape = [texture.shape[0],texture.shape[0], 1]
-        extend_smap = np.ones(shape)*smap[0]
+        extend_smap = np.ones(shape) * smap[0]
         conca_data = np.concatenate((extend_smap, texture[:, :, 1:-1]), axis=2)
+        conca_data = np.concatenate((conca_data, ndvi), axis=2)
+#         conca_data = self.__per_channel_standardization__(conca_data)
         return conca_data
     
     def __flatten__(self, smap:np.array, texture:np.array)->np.array:
@@ -191,6 +201,19 @@ class SMAPDataset(Dataset):
         texture_flat = texture.flatten()
         return  np.concatenate((smap, texture_flat), axis=0)
     
+    def __per_channel_standardization__(self, multi_channel_array):
+        channels = range(multi_channel_array.shape[-1])
+        print(channels)
+        # 对每个通道独立进行标准化
+        for i in channels:
+            mean = np.mean(multi_channel_array[:, :, i])
+            std = np.std(multi_channel_array[:, :, i])
+            if std==0:
+                print(i)
+                continue
+            multi_channel_array[:, :, i] = (multi_channel_array[:, :, i] - mean) / std
+            
+            
     def get_input_shape(self, idx):
         data_pkg = self.__getitem__(idx)
         return data_pkg['processed_data'].shape

@@ -13,20 +13,20 @@ def display(smap_list, smap_pred_list, ab_pred_list, flag):
     fig, (fig_ax1, fig_ax2) = plt.subplots(1, 2, figsize=(10, 2.5), sharey=False)
 
     # 设置第一个子图的标题和横纵坐标标签
-    fig_ax1.set_title('SMAP')
-    fig_ax1.set_xlabel('X-axis')
-    fig_ax1.set_ylabel('Y-axis')
+    fig_ax1.set_title('Upscaling of SM Comparing with SMAP')
+    fig_ax1.set_xlabel('Sample')
+    fig_ax1.set_ylabel('Soil Moisture')
 #     fig_ax1.set_yticks(ytick1)
 
     # 绘制第一个子图
-    fig_ax1.plot(x, smap_list, label='smap')
-    fig_ax1.plot(x, smap_pred_list, label='smap_pred')
+    fig_ax1.plot(x, smap_list, label='SMAP')
+    fig_ax1.plot(x, smap_pred_list, label='Prediction')
     fig_ax1.legend()
     
     # 设置第二个子图的标题和横纵坐标标签
     fig_ax2.set_title('Model Prediction')
-    fig_ax2.set_xlabel('X-axis')
-    fig_ax2.set_ylabel('Y-axis')
+    fig_ax2.set_xlabel('Sample')
+#     fig_ax2.set_ylabel('')
 #     fig_ax2.set_yticks(ytick2)
     
     # 绘制第二个子图
@@ -38,6 +38,7 @@ def display(smap_list, smap_pred_list, ab_pred_list, flag):
     plt.tight_layout()
     
     # 显示图形
+    plt.savefig('validing.png', bbox_inches='tight')
     plt.show()
     
 def calculate_upscaling_sm(sm_bar, sm_bar_sd, ati, ati_bar, ati_bar_sd):
@@ -48,7 +49,7 @@ def self_defined_loss(pred_ab, label_data, flag, sim_threshold):
     pred_a = pred_ab[:, 0].unsqueeze(1)
     pred_b = pred_ab[:, 1].unsqueeze(1)
 #     print(pred_a)
-    return ab_physics_loss(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 1) + EDS_loss(pred_b, sim_threshold, 0.5)
+    return ab_physics_loss(pred_ab, label_data, flag), EDS_loss(pred_ab, sim_threshold, 1)# + EDS_loss(pred_b, sim_threshold, 0.5)
 
 def sd_physics_loss(pred_ab, label_data, flag):
     pass
