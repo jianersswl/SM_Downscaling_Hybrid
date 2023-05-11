@@ -11,9 +11,10 @@ class SMAPDataset(Dataset):
     root: 输入数据的根目录
     insitu_validation: 是否用于验证站点数据
     '''
-    def __init__(self, root, insitu_validation=False):
+    def __init__(self, root, ati_rate='70', insitu_validation=False):
         # 数据加载模式
         self.insitu_validation = insitu_validation
+        self.ati_rate = ati_rate
         
         # 输入变量
         self.smap = []       # SMAP数据路径
@@ -30,7 +31,7 @@ class SMAPDataset(Dataset):
         self.valid_day_sequence = []  # 有效天数的完整序列
         
         if insitu_validation==False:
-            ati_grid_root = os.path.join(root,'LABEL\ATI\GRID')
+            ati_grid_root = os.path.join(root,'LABEL\ATI\GRID_' + self.ati_rate)
             print(ati_grid_root)
             subdir_list = sorted(os.listdir(ati_grid_root))
 
@@ -66,11 +67,11 @@ class SMAPDataset(Dataset):
 
                     # 添加LABEL变量路径
                     self.smap_unorm.append(root + '\\LABEL\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
-                    self.grid_ati.append(root + '\\LABEL\\ATI\\GRID\\' + str(day) + '\\' + str(smapid) + '.npy')
+                    self.grid_ati.append(root + '\\LABEL\\ATI\\GRID_' + self.ati_rate + '\\' + str(day) + '\\' + str(smapid) + '.npy')
 
                     # 显示添加的路径
                     print_path(root + '\\LABEL\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
-                    print_path(root + '\\LABEL\\ATI\\GRID\\' + str(day) + '\\' + str(smapid) + '.npy')
+                    print_path(root + '\\LABEL\\ATI\\GRID_' + self.ati_rate + '\\' + str(day) + '\\' + str(smapid) + '.npy')
         else:
             smap2insitu_root = os.path.join(root,'LABEL\SMAPID2INSITUID')
             subdir_list = sorted(os.listdir(smap2insitu_root))

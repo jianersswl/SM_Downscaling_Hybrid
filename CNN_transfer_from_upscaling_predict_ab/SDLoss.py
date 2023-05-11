@@ -77,10 +77,6 @@ def display_sm(sm_list, sm_pred_list, ab_pred_list, flag):
     
     # 显示图形
     plt.show()
-    
-def calculate_upscaling_sm(sm_bar, sm_bar_sd, ati, ati_bar, ati_bar_sd):
-#     print('ati info:', (ati - ati_bar) / ati_bar_sd)
-    return sm_bar + sm_bar_sd * (ati - ati_bar) / ati_bar_sd
 
 def self_defined_sm_loss(pred_ab, label_data, flag, sim_threshold):
     pred_a = pred_ab[:, 0].unsqueeze(1)
@@ -90,9 +86,9 @@ def self_defined_sm_loss(pred_ab, label_data, flag, sim_threshold):
 def self_defined_smap_loss(pred_ab, label_data, flag, sim_threshold):
     pred_a = pred_ab[:, 0].unsqueeze(1)
     pred_b = pred_ab[:, 1].unsqueeze(1)
-    return ab_physics_loss_smap(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 10) + EDS_loss(pred_b, sim_threshold, 1)
+    return ab_physics_loss_smap(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 10) #+ EDS_loss(pred_b, sim_threshold, 1)
 
-def ab_physics_loss_smap(pred_ab, label_data, flag):
+def ab_physics_loss_smap(pred_ab, label_data, flag): # sm = a * pij + b
     # 获取smap
     smap = label_data['smap']
     # 获取ati_grid
@@ -104,8 +100,10 @@ def ab_physics_loss_smap(pred_ab, label_data, flag):
     # 遍历 ati_grid 中的每个二维张量，将其转换成对应的二值矩阵
     for i in range(ati_valid.size(0)):
         ati_valid[i] = (ati_grid[i] != 0).type(torch.float32)
-
+    
+    # 创建一个与 smap 形状相同的全零张量 pred_smap
     pred_smap = torch.zeros_like(smap, dtype=torch.float32)
+    # 计算 smap_downscaling，并将其保存在 pred_smap 中
     for i in range(pred_ab.size(0)):
         a, b = pred_ab[i]
         smap_downscaling = torch.mul(a * ati_grid[i] + b, ati_valid[i])
@@ -116,7 +114,7 @@ def ab_physics_loss_smap(pred_ab, label_data, flag):
         display_smap(smap, pred_smap, pred_ab, flag)
     return loss
 
-def ab_physics_loss_sm(pred_ab, label_data, flag):
+def ab_physics_loss_sm(pred_ab, label_data, flag): # sm = a * pij + b
     # 获取smap
     smap = label_data['smap']
     # 获取ati
@@ -172,7 +170,7 @@ def EDS_loss(pred, penalty_threshold, penalty_lambda):
     # 计算均值
     non_dig_sum_mean = non_dig_sum/(eds_sim_mat.shape[0]*(eds_sim_mat.shape[0]-1))
     similarity = 1/(1+non_dig_sum_mean)
-#     print('similarity: ', similarity)
+#     print('similarity: ', eds_sim_mat)
 #     similarity = similarity*similarity
     if(similarity<=penalty_threshold):
         penalty_lambda = 0
