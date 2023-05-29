@@ -1,4 +1,5 @@
 # Pytorch
+import torch
 import torch.nn as nn
 import torch.nn.init as init
 
@@ -25,8 +26,11 @@ class SMCNN(nn.Module):
     def forward(self, x):
         x = x.permute([0, 3, 1, 2])
         out = self.cnn(x)
-        
         out = out.contiguous().view(out.size()[0], -1)
         out = self.fc(out)
-#         out = out.squeeze(1)
+#         print(out)
+#         nn.ReLU(out[:, 0])
+        # 将a的值转换为非负值
+#         out[:, 0] = torch.clamp(out[:, 0], min=0)
+#         print(out)
         return out

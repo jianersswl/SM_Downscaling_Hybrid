@@ -21,6 +21,7 @@ def collate_insitu_validation(batch):
     label_data = {}
     _label_data = [sample['label_data'] for sample in batch]
     label_data['smap'] = torch.FloatTensor(np.asarray([sample['smap'] for sample in _label_data]))
+    label_data['ati_grid'] = torch.FloatTensor(np.asarray([sample['ati_grid'] for sample in _label_data]))
     label_data['insitu_sm'] = [sample['insitu_sm'] for sample in _label_data]
     label_data['insitu_ati'] = [sample['insitu_ati'] for sample in _label_data]
     
@@ -35,7 +36,8 @@ def collate_insitu_validation(batch):
 
 def collate_fn(batch):
     # 从每个样本的字典中获取处理结果、标签和其他数据，并将它们存储在同一个字典中
-    processed_data = torch.FloatTensor(np.asarray([sample['processed_data'] for sample in batch]))
+    processed_data = torch.tensor(np.asarray([sample['processed_data'] for sample in batch]), dtype=torch.float32)
+    processed_data.requires_grad = True
     
     label_data = {}
     _label_data = [sample['label_data'] for sample in batch]

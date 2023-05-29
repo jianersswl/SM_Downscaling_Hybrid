@@ -2,6 +2,7 @@
 import os
 import re
 import glob
+import torch
 import numpy as np
 # Pytorch
 from torch.utils.data import Dataset
@@ -94,7 +95,12 @@ class SMAPDataset(Dataset):
                 for insitu_file in insitu_files: # 例如：SMAPID=1
                     smapid = os.path.basename(insitu_file).split('.')[0]
                     print('_____________________________smap cell: ' + str(smapid) + '_____________________________')
-
+                    
+                    # 判断此处的ATI是否有效 无效则跳过该GRID的站点数据
+                    ati_path = root + '\\LABEL\\ATI\\GRID_' + self.ati_rate + '\\' + str(day) + '\\' + str(smapid) + '.npy'
+                    if print_path(ati_path)==False:
+                        continue
+                    
                     # 添加输入变量路径
                     self.smap.append(root + '\\INPUT\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
                     self.texture.append(root + '\\INPUT\\TEXTURE\\' + str(smapid) + '.npy')
@@ -107,9 +113,11 @@ class SMAPDataset(Dataset):
 
                     # 添加LABEL变量路径
                     self.smap_unorm.append(root + '\\LABEL\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
+                    self.grid_ati.append(root + '\\LABEL\\ATI\\GRID_' + self.ati_rate + '\\' + str(day) + '\\' + str(smapid) + '.npy')
                     
                     # 显示添加的路径
                     print_path(root + '\\LABEL\\SMAP\\' + str(day) + '\\' + str(smapid) + '.npy')
+                    print_path(root + '\\LABEL\\ATI\\GRID_' + self.ati_rate + '\\' + str(day) + '\\' + str(smapid) + '.npy')
                     
                     # 一个 SMAP 对应多个 in-situ SM
                     smap_to_insitu = np.load(root + "\\LABEL\\SMAPID2INSITUID\\" + str(day) + '\\' + str(smapid) + '.npy')
@@ -150,18 +158,19 @@ class SMAPDataset(Dataset):
         
         # 选择堆叠为连接input特征的方式
         x = self.__stack__(smap, texture, ndvi)
+#         x = torch.FloatTensor(x)
+#         x.requires_grad = True
         data_pkg['processed_data'] = x
         
         # 加载label数据
         smap_unorm_path = self.smap_unorm[idx]
         smap_unorm = np.load(smap_unorm_path)
         data_pkg['label_data']['smap'] = smap_unorm
+        ati_grid_path = self.grid_ati[idx]
+        ati_grid = np.load(ati_grid_path)
+        data_pkg['label_data']['ati_grid'] = ati_grid
         
-        if self.insitu_validation==False:
-            ati_grid_path = self.grid_ati[idx]
-            ati_grid = np.load(ati_grid_path)
-            data_pkg['label_data']['ati_grid'] = ati_grid   
-        else:
+        if self.insitu_validation==True:
             # 一个SMAPID可能对应多个in-situ sm
             insitu_sm_path_list = self.insitu_sm[idx]
             insitu_ati_path_list = self.insitu_ati[idx]
@@ -225,5 +234,7 @@ class SMAPDataset(Dataset):
 def print_path(path):
     if os.path.exists(path):
         print("\033[32m" + path + "\033[0m")  # 绿色文本
+        return True
     else:
         print("\033[31m" + path + "\033[0m")  # 红色文本 
+        return False

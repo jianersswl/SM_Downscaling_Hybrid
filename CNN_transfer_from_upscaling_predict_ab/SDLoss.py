@@ -86,7 +86,7 @@ def self_defined_sm_loss(pred_ab, label_data, flag, sim_threshold):
 def self_defined_smap_loss(pred_ab, label_data, flag, sim_threshold):
     pred_a = pred_ab[:, 0].unsqueeze(1)
     pred_b = pred_ab[:, 1].unsqueeze(1)
-    return ab_physics_loss_smap(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 10) #+ EDS_loss(pred_b, sim_threshold, 1)
+    return ab_physics_loss_smap(pred_ab, label_data, flag), EDS_loss(pred_a, sim_threshold, 10) + EDS_loss(pred_b, sim_threshold, 1)
 
 def ab_physics_loss_smap(pred_ab, label_data, flag): # sm = a * pij + b
     # 获取smap
